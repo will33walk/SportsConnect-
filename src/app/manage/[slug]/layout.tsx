@@ -33,9 +33,11 @@ export default async function ManageLayout({
     <OrgShell
       org={org}
       home={`/manage/${slug}`}
-      // Seasons and People aren't built yet, so they aren't here. A nav item
-      // that 404s is worse than one that's missing.
+      // Seasons isn't built yet, so it isn't here. A nav item that 404s is
+      // worse than one that's missing.
       nav={[
+        { href: `/manage/${slug}/people`, label: 'People' },
+        { href: `/manage/${slug}/coaches`, label: 'Coaches' },
         { href: `/manage/${slug}/payments`, label: 'Payments' },
         { href: `/manage/${slug}/settings`, label: 'Settings' },
         { href: `/l/${slug}`, label: 'View public page' },

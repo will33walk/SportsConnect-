@@ -35,6 +35,26 @@ from. The rules below are the ones that bite if you skip them.
   "this game". The ladder answers "this organization". Don't use one for the
   other — a head coach is not a league manager.
 
+## Coaches and rosters
+
+- **Approval is not clearance.** An approved application means the league
+  wants this person; clearance means every active `coach_requirements` row
+  has an unexpired completion. Only clearance allows a team assignment, and
+  a trigger on `team_coaches` enforces it — not the action, not the form.
+- Clearance applies where `programs.involves_minors` is true. An adult
+  softball captain is not a youth coach, and the rule knows the difference.
+- `leagues.roster_model` decides how players reach a team: `draft` (coaches
+  pick), `assigned` (the league places them), `team_registration` (a captain
+  registers a team and invites their own players). Anything that builds a
+  roster branches on it.
+- A `team_members` row identifies someone by a registration, a user, or just
+  a name — in a team-registration league the players never individually
+  register, and a captain can write a teammate onto the sheet before that
+  person has an account.
+- Invitations carry roles, so they stop at `admin`. A captain's roster invite
+  is the exception and is pinned to `role = 'member'` by its own policy: a
+  mistyped address should never hand out authority.
+
 ## Games
 
 - A game is an append-only log in `game_events`. Everything derived —

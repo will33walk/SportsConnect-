@@ -36,6 +36,7 @@ async function _signUp(formData: FormData): Promise<never> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
   const fullName = String(formData.get('full_name') ?? '').trim();
+  const next = safeNext(formData.get('next') as string | null);
 
   if (!email || !password) throw new Error('Enter your email and a password.');
   // Supabase enforces its own minimum; this is so the message is ours and
@@ -53,7 +54,10 @@ async function _signUp(formData: FormData): Promise<never> {
 
   if (error) throw new Error(error.message);
 
-  redirect('/app');
+  // Usually /app, but someone who arrived from an invitation link goes back
+  // to it so they land in the league they were invited to rather than on an
+  // empty "you're not in any leagues yet" screen.
+  redirect(next);
 }
 
 async function _signOut(): Promise<never> {

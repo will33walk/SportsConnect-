@@ -42,7 +42,7 @@ export default async function LeagueLayout({ children, params }: LayoutProps) {
       home={`/l/${slug}`}
       // Schedule, Teams and Standings go here once those pages exist. The
       // league home currently carries what little there is to show.
-      nav={[]}
+      nav={[{ href: `/l/${slug}/coach`, label: 'Coach with us' }]}
     >
       {children}
     </OrgShell>

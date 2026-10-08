@@ -27,18 +27,29 @@ interesting to build.
   league's own dashboard, and a signature-verified webhook.
 - Branding: a league sets its colours and sees them applied.
 
+- Invitations: token links, role-scoped, accepted into a membership.
+- Coach applications: a public apply page, a review queue, and a per-coach
+  requirement checklist with expiry.
+- Coach clearance enforced by a database trigger on `team_coaches`, so no
+  path — form, script, import, future bulk tool — can put an uncleared adult
+  on a youth team.
+- Three roster models (`draft`, `assigned`, `team_registration`), including
+  team-level registration where a captain signs up a whole team and invites
+  their own players.
+
 ## Next, in order
 
-**1. Invitations.** Getting a board and coaches into a league. Right now the
-only way into an organization is to create it. Memberships, roles and the
-policies behind them all exist; what's missing is the invite flow on top.
+**1. Seasons and teams.** Create a season, pick its roster model, add
+divisions and teams, generate a schedule with the round-robin logic that's
+already here and tested. This is the gate on nearly everything below: coach
+assignment, rosters and captain tools are all written but have no teams to
+point at yet.
 
-**2. Seasons and teams.** Create a season, add divisions and teams, generate
-a schedule with the round-robin logic that's already here and tested.
-
-**3. Registration.** Build the form from the question bank, apply tiers,
+**2. Registration.** Build the form from the question bank, apply tiers,
 sibling discounts and promo codes, take payment through the league's
-connected account, land the player on a roster.
+connected account, land the player on a roster. Three paths out of it, one
+per roster model: into the draft pool, straight onto a team, or creating a
+team with its captain.
 
 **4. The draft.** The screens for the draft board, draft lists and
 evaluations. The logic came over whole; none of it has a UI yet.

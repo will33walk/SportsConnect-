@@ -18,12 +18,20 @@ const STEPS: {
     cta: 'Connect Stripe',
   },
   {
-    title: 'Create a season',
-    body: 'A season holds your divisions, teams and schedule. Most leagues run one per sport per year.',
+    title: 'Invite your board',
+    body: 'People sign in with their own email, and you choose what each of them can do.',
+    href: 'people',
+    cta: 'Invite people',
   },
   {
-    title: 'Invite your board and coaches',
-    body: 'People sign in with their own email, and you choose what each of them can do.',
+    title: 'Take coach applications',
+    body: 'Volunteers apply through a link you share. You approve them and record their requirements before anyone goes on a team.',
+    href: 'coaches',
+    cta: 'Review coaches',
+  },
+  {
+    title: 'Create a season',
+    body: 'A season holds your divisions, teams and schedule. Most leagues run one per sport per year.',
   },
 ];
 
