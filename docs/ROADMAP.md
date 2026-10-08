@@ -16,29 +16,39 @@ interesting to build.
 - Domain logic lifted and regrouped, tests included.
 - `SportEngine` contract, baseball adapter, sport registry.
 - Visual system and per-tenant theming.
+- Public read layer: published schedules, rosters, standings and live games
+  are readable with no account, because the person most likely to open a
+  league's page has none.
+- Auth: session middleware, sign in, sign up, sign out.
+- Onboarding: create a league, pick its address, land on a three-step setup.
+- Per-league PWA manifests, so installing from a league's page puts that
+  league on the home screen rather than ours.
+- Stripe Connect: connected-account creation, hosted onboarding, status, the
+  league's own dashboard, and a signature-verified webhook.
+- Branding: a league sets its colours and sees them applied.
 
 ## Next, in order
 
-**1. Auth and onboarding.** Sign up, sign in, create an organization, invite
-the first people. Nothing else can be demonstrated until a league can exist.
+**1. Invitations.** Getting a board and coaches into a league. Right now the
+only way into an organization is to create it. Memberships, roles and the
+policies behind them all exist; what's missing is the invite flow on top.
 
-**2. Stripe Connect.** Onboard a connected account, take a registration
-payment to it, handle the webhook, show the league their money. This is the
-gate on a league actually running a season here, and it is the largest piece
-of genuinely new work.
+**2. Seasons and teams.** Create a season, add divisions and teams, generate
+a schedule with the round-robin logic that's already here and tested.
 
 **3. Registration.** Build the form from the question bank, apply tiers,
-sibling discounts and promo codes, confirm, land on a roster.
+sibling discounts and promo codes, take payment through the league's
+connected account, land the player on a roster.
 
-**4. The season.** Schedule generation, rosters, the draft screens, game
-list, score entry, standings.
+**4. The draft.** The screens for the draft board, draft lists and
+evaluations. The logic came over whole; none of it has a UI yet.
 
 **5. Live tracking.** Wire the baseball engine to the scorekeeper screen and
 the public follow view. Most of the logic is already here and tested; what is
 missing is the screens and the polling route.
 
-**6. The league PWA.** Per-league manifest and icons, install prompt, push
-notifications for schedule changes and game results.
+**6. Push notifications.** Subscriptions and the service worker, so an
+installed league app can tell a parent a game moved.
 
 **7. Basketball.** The second sport, and the real test of whether adding one
 is configuration. If it needs schema changes, the abstraction was wrong.

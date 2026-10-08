@@ -235,6 +235,61 @@ a:hover { text-decoration-color: currentColor; }
 
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* --- Forms ---------------------------------------------------------------
+   Underlined fields rather than boxes: the same ruled-line logic as the rest
+   of the system, and it reads as something to write on.
+-------------------------------------------------------------------------- */
+
+.field { margin-top: 1.5rem; }
+
+.field label {
+  display: block;
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.25rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+  font: inherit;
+  width: 100%;
+  max-width: 24rem;
+  padding: 0.5rem 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  border-radius: 0;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--brand);
+  border-bottom-width: 2px;
+  /* Keep the field from shifting by 1px when the border thickens. */
+  padding-bottom: calc(0.5rem - 1px);
+}
+
+.field input:invalid:not(:placeholder-shown) { border-bottom-color: var(--loss); }
+
+.field-hint {
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+  margin: 0.375rem 0 0;
+}
+
+.field-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.field-row .field { flex: 1 1 12rem; }
+
 /* --- Layout -------------------------------------------------------------- */
 
 .shell {

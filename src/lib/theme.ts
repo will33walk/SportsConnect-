@@ -6,8 +6,12 @@
 // volunteer board does not want and should not be handed a design system.
 // Two knobs is enough to stop the product feeling like someone else's.
 //
-// The colours arrive as CSS custom properties on <html>, which is why
-// globals.css reads --tenant-brand with a fallback instead of hardcoding one.
+// The colours arrive as CSS custom properties on the league's layout wrapper,
+// which is why globals.css reads --tenant-brand with a fallback instead of
+// hardcoding one. A wrapper rather than <html> because the root layout owns
+// that element and a league's pages are nested inside it -- custom properties
+// cascade, so a div scopes the theme to exactly the pages that belong to the
+// league and leaves the product's own chrome alone.
 
 export interface TenantBranding {
   logoUrl: string | null;

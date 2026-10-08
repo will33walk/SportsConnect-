@@ -52,8 +52,107 @@ export interface Database {
           created_at: string;
           archived_at: string | null;
         };
-        Insert: { slug: string; name: string; timezone?: string };
+        Insert: {
+          slug: string;
+          name: string;
+          timezone?: string;
+          logo_url?: string | null;
+          brand_primary?: string | null;
+          brand_accent?: string | null;
+        };
         Update: Partial<Database['public']['Tables']['organizations']['Insert']>;
+        Relationships: [];
+      };
+      organization_billing: {
+        Row: {
+          organization_id: string;
+          stripe_account_id: string | null;
+          stripe_customer_id: string | null;
+          charges_enabled: boolean;
+          subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled';
+          trial_ends_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          stripe_account_id?: string | null;
+          stripe_customer_id?: string | null;
+          charges_enabled?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['organization_billing']['Insert']>;
+        Relationships: [];
+      };
+      program_sessions: {
+        Row: {
+          id: string;
+          program_id: string;
+          organization_id: string;
+          session_type: 'game' | 'practice' | 'meeting';
+          home_team_id: string | null;
+          away_team_id: string | null;
+          location_name: string | null;
+          location_address: string | null;
+          start_at: string;
+          end_at: string | null;
+          status: 'scheduled' | 'in_progress' | 'final' | 'cancelled' | 'postponed';
+          home_score: number | null;
+          away_score: number | null;
+          round_label: string | null;
+          bracket_slot: string | null;
+          stream_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          program_id: string;
+          organization_id: string;
+          session_type?: 'game' | 'practice' | 'meeting';
+          home_team_id?: string | null;
+          away_team_id?: string | null;
+          location_name?: string | null;
+          start_at: string;
+          end_at?: string | null;
+          status?: 'scheduled' | 'in_progress' | 'final' | 'cancelled' | 'postponed';
+          home_score?: number | null;
+          away_score?: number | null;
+          stream_url?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['program_sessions']['Insert']>;
+        Relationships: [];
+      };
+      registrations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          program_id: string;
+          dependent_id: string | null;
+          registrant_id: string | null;
+          status: 'pending' | 'confirmed' | 'waitlisted' | 'cancelled' | 'refunded';
+          pricing_tier_id: string | null;
+          promo_code_id: string | null;
+          amount_due_cents: number;
+          amount_paid_cents: number;
+          stripe_payment_intent_id: string | null;
+          stripe_checkout_session_id: string | null;
+          answers: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          program_id: string;
+          dependent_id?: string | null;
+          registrant_id?: string | null;
+          status?: 'pending' | 'confirmed' | 'waitlisted' | 'cancelled' | 'refunded';
+          pricing_tier_id?: string | null;
+          promo_code_id?: string | null;
+          amount_due_cents?: number;
+          amount_paid_cents?: number;
+          stripe_payment_intent_id?: string | null;
+          stripe_checkout_session_id?: string | null;
+          answers?: Json;
+        };
+        Update: Partial<Database['public']['Tables']['registrations']['Insert']>;
         Relationships: [];
       };
       team_coaches: {

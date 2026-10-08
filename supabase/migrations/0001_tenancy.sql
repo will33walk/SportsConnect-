@@ -38,13 +38,8 @@ create table organizations (
   brand_primary text check (brand_primary ~* '^#[0-9a-f]{6}$'),
   brand_accent text check (brand_accent ~* '^#[0-9a-f]{6}$'),
 
-  -- Billing. Stripe Connect: each org is a connected account receiving its own
-  -- registration money directly. Null until onboarding completes.
-  stripe_account_id text unique,
-  stripe_customer_id text unique,
-  subscription_status text not null default 'trialing'
-    check (subscription_status in ('trialing','active','past_due','canceled')),
-  trial_ends_at timestamptz not null default (now() + interval '30 days'),
+  -- Billing lives in organization_billing, not here. See the note on that
+  -- table: this row is world-readable and those columns must not be.
 
   created_at timestamptz not null default now(),
   archived_at timestamptz
@@ -241,6 +236,51 @@ create policy "admins manage memberships"
   with check (has_org_role(organization_id, 'admin'));
 
 -- ---------------------------------------------------------------------------
+-- Billing
+--
+-- A separate table rather than columns on `organizations`, because that row
+-- is world-readable: a league's name, logo and colours have to render for a
+-- grandparent with no account (0005_public_read.sql). RLS grants or denies
+-- whole rows, and a column-level REVOKE does not override an existing
+-- table-level grant in Postgres, so the only reliable way to keep the Stripe
+-- account id off a public row is for it not to be on that row.
+--
+-- Readable by admins only. Not by league managers, not by coaches: this says
+-- where the league's money goes.
+-- ---------------------------------------------------------------------------
+
+create table organization_billing (
+  organization_id uuid primary key references organizations (id) on delete cascade,
+
+  -- Stripe Connect: each league is a connected account receiving its own
+  -- registration money directly. Null until onboarding starts.
+  stripe_account_id text unique,
+  stripe_customer_id text unique,
+
+  -- Whether the connected account can actually take charges yet. Mirrored
+  -- from Stripe by the account.updated webhook; Stripe remains the source of
+  -- truth and this is a cache so page loads don't call their API.
+  charges_enabled boolean not null default false,
+
+  subscription_status text not null default 'trialing'
+    check (subscription_status in ('trialing', 'active', 'past_due', 'canceled')),
+  trial_ends_at timestamptz not null default (now() + interval '30 days'),
+
+  updated_at timestamptz not null default now()
+);
+
+alter table organization_billing enable row level security;
+
+create policy "admins read billing"
+  on organization_billing for select
+  using (has_org_role(organization_id, 'admin'));
+
+-- No insert/update/delete policy at all. Every write to this table happens
+-- server-side through the service role after the caller has been checked --
+-- the Stripe onboarding action and the webhook. There is no path from a
+-- browser to these columns.
+
+-- ---------------------------------------------------------------------------
 -- Tenant signup
 --
 -- The whole self-service onboarding path in one transaction: a signed-in user
@@ -271,6 +311,10 @@ begin
 
   insert into memberships (organization_id, user_id, role, accepted_at)
   values (new_org, auth.uid(), 'owner', now());
+
+  -- Start the trial clock in the same transaction, so there is no window
+  -- where a league exists with no billing row for the rest of the app to read.
+  insert into organization_billing (organization_id) values (new_org);
 
   return new_org;
 end;

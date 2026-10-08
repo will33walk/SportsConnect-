@@ -45,12 +45,12 @@ export default function Home() {
               cut of your registration money.
             </p>
 
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-              <a className="btn" href="/signup">
+            {/* One call to action. A second button competing with it would
+                only split attention, and there is no demo league to point at
+                yet. */}
+            <div style={{ marginTop: '2rem' }}>
+              <a className="btn" href="/signup" style={{ display: 'inline-block' }}>
                 Start a league
-              </a>
-              <a className="btn btn-quiet" href="/demo">
-                See a live game
               </a>
             </div>
           </div>

@@ -15,6 +15,17 @@ from. The rules below are the ones that bite if you skip them.
 - Application-level checks in `src/lib/auth.ts` are for early failure and
   rendering decisions. They are never the only thing enforcing access — RLS
   enforces the same rules independently.
+- **Publication, not membership, is the public boundary.** A league's
+  published schedule, rosters, standings and live games are readable with no
+  account (`0005_public_read.sql`) — the person most likely to open a league
+  page is a grandparent with a link. Anything about a family, a coach's draft
+  board, or money stays shut regardless of publication.
+- **A world-readable row holds nothing private.** RLS grants whole rows, and
+  a column-level `REVOKE` does not override a table-level grant, so anything
+  that must stay private goes in its own table. That is why billing is
+  `organization_billing` and not columns on `organizations`.
+- A non-member gets `notFound()`, not a 403. The difference between the two
+  tells a stranger which leagues exist.
 
 ## Roles
 
