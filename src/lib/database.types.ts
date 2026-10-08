@@ -84,6 +84,64 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['organization_billing']['Insert']>;
         Relationships: [];
       };
+      sports: {
+        Row: {
+          key: string;
+          label: string;
+          scoring_engine: string | null;
+          period_noun: string;
+          period_count: number | null;
+          sort_order: number;
+          is_active: boolean;
+        };
+        Insert: { key: string; label: string };
+        Update: Partial<Database['public']['Tables']['sports']['Insert']>;
+        Relationships: [];
+      };
+      programs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          kind: 'league' | 'camp' | 'clinic' | 'class' | 'club' | 'event';
+          sport_key: string | null;
+          parent_program_id: string | null;
+          title: string;
+          slug: string;
+          description: string | null;
+          short_description: string | null;
+          category: string | null;
+          age_min: number | null;
+          age_max: number | null;
+          capacity: number | null;
+          is_free: boolean;
+          status: 'draft' | 'published' | 'registration_closed' | 'archived' | 'cancelled';
+          registration_opens_at: string | null;
+          registration_closes_at: string | null;
+          starts_on: string | null;
+          ends_on: string | null;
+          involves_minors: boolean;
+          sibling_discount_enabled: boolean;
+          sibling_discount_type: 'percent' | 'flat' | null;
+          sibling_discount_rate: number | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          kind: 'league' | 'camp' | 'clinic' | 'class' | 'club' | 'event';
+          title: string;
+          slug: string;
+          sport_key?: string | null;
+          status?: 'draft' | 'published' | 'registration_closed' | 'archived' | 'cancelled';
+          starts_on?: string | null;
+          ends_on?: string | null;
+          involves_minors?: boolean;
+          created_by?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['programs']['Insert']>;
+        Relationships: [];
+      };
       program_sessions: {
         Row: {
           id: string;

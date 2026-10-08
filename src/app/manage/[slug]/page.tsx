@@ -31,7 +31,9 @@ const STEPS: {
   },
   {
     title: 'Create a season',
-    body: 'A season holds your divisions, teams and schedule. Most leagues run one per sport per year.',
+    body: 'Teams, schedule and registrations for one division. You pick how players get on teams — you place them, coaches draft them, or captains bring their own.',
+    href: 'seasons',
+    cta: 'Add a season',
   },
 ];
 

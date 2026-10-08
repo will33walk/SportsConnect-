@@ -37,13 +37,13 @@ interesting to build.
   team-level registration where a captain signs up a whole team and invites
   their own players.
 
-## Next, in order
+- Seasons: create one with a sport and a roster model, add teams, generate a
+  schedule across the nights a league actually has the field, and publish
+  schedule, rosters and standings independently.
+- Team pages: assign cleared coaches, with blocked ones listed and what each
+  still owes; captain tools for inviting teammates or writing them in.
 
-**1. Seasons and teams.** Create a season, pick its roster model, add
-divisions and teams, generate a schedule with the round-robin logic that's
-already here and tested. This is the gate on nearly everything below: coach
-assignment, rosters and captain tools are all written but have no teams to
-point at yet.
+## Next, in order
 
 **2. Registration.** Build the form from the question bank, apply tiers,
 sibling discounts and promo codes, take payment through the league's
