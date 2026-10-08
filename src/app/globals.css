@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   SportsConnect — visual system
+
+   The reference object is a scorebook: a ruled paper grid filled in by hand in
+   the bleachers, sitting next to a scoreboard. Two registers, used for two
+   different jobs:
+
+     PAPER    structure, rosters, schedules, money. Ruled lines, not cards. No
+              shadows, almost no radius. Information is organised by rules and
+              alignment the way a scorebook page is, because that is what the
+              people using this already know how to read.
+
+     BULB     live state only. Amber on dark, like a scoreboard lamp. It is the
+              single loud thing in the product and it is deliberately rationed:
+              amber appears when a game is in progress and essentially nowhere
+              else, so the colour itself carries meaning rather than decoration.
+
+   Deliberately not the Michigan City palette this product's code came from —
+   that was lake navy and civic blue for a parks department, and this is a
+   different product sold to different people.
+--------------------------------------------------------------------------- */
+
+:root {
+  /* Paper. Cool and slightly grey-green, like a chalked line on grass --
+     not the warm cream that every other product in this category reaches for. */
+  --paper:        #F1F3F0;
+  --paper-raised: #FAFBF9;
+  --paper-sunk:   #E4E8E3;
+
+  /* Ink. Genuinely blue, the colour of a ballpoint that has been in a
+     coach's pocket all season, rather than a tinted near-black. */
+  --ink:          #15233C;
+  --ink-soft:     #4A5970;
+  --ink-faint:    #8793A6;
+
+  /* Rules. The structural device: scorebook lines. */
+  --rule:         #CCD3CE;
+  --rule-strong:  #A6B1AB;
+
+  /* The bulb. Live state, and nothing else. */
+  --bulb:         #E39B2C;
+  --bulb-glow:    rgba(227, 155, 44, 0.28);
+  --board:        #11180F;
+
+  /* Outcome colours, used in standings and stat deltas. */
+  --win:          #2C6E49;
+  --loss:         #9B3024;
+
+  /* Per-tenant branding. A league sets these at signup and they land here as
+     inline styles on <html>; the fallbacks are the product's own. Only two
+     knobs on purpose -- a volunteer board should not be art-directing a
+     design system, and two colours is enough to feel like theirs. */
+  --brand:        var(--tenant-brand, #2C5F7C);
+  --brand-ink:    var(--tenant-brand-ink, #FFFFFF);
+
+  --radius:       2px;
+  --radius-board: 6px;
+
+  --measure:      66ch;
+
+  --step--1:      0.8125rem;
+  --step-0:       1rem;
+  --step-1:       1.1875rem;
+  --step-2:       1.5rem;
+  --step-3:       2.125rem;
+  --step-4:       3rem;
+  --step-5:       4.25rem;
+}
+
+/* Dark: the whole page moves toward the board. Paper becomes the dark green
+   of a scoreboard housing rather than grey, so the amber still reads as a
+   lamp in a housing and not as a warning colour on a dashboard. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:        #121A14;
+    --paper-raised: #1A241C;
+    --paper-sunk:   #0C120E;
+    --ink:          #E6EBE5;
+    --ink-soft:     #A3B0A6;
+    --ink-faint:    #6E7C72;
+    --rule:         #2A3A2E;
+    --rule-strong:  #3E5244;
+    --board:        #0A0F09;
+    --win:          #58B07E;
+    --loss:         #D4705F;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper:        #121A14;
+  --paper-raised: #1A241C;
+  --paper-sunk:   #0C120E;
+  --ink:          #E6EBE5;
+  --ink-soft:     #A3B0A6;
+  --ink-faint:    #6E7C72;
+  --rule:         #2A3A2E;
+  --rule-strong:  #3E5244;
+  --board:        #0A0F09;
+  --win:          #58B07E;
+  --loss:         #D4705F;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--step-0);
+  line-height: 1.55;
+  /* Tabular figures everywhere by default. This is a product made almost
+     entirely of numbers in columns -- scores, jersey numbers, stat lines --
+     and proportional digits make those columns ragged. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display type is the same family at full width. Sports lettering is wide and
+   heavy -- jersey wordmarks, scoreboard panels -- so width does the work that
+   a second typeface would otherwise do. */
+h1, h2, h3, .display {
+  font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  font-stretch: 125%;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--step-4); }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+
+p { margin: 0 0 1em; max-width: var(--measure); }
+
+a {
+  color: inherit;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 0.2em;
+}
+a:hover { text-decoration-color: currentColor; }
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* --- Ruled rows: the structural primitive, instead of a card kit ---------- */
+
+.ruled > * + * { border-top: 1px solid var(--rule); }
+
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.rule-heavy { border-top: 2px solid var(--ink); }
+
+/* --- The board: the one loud element ------------------------------------- */
+
+.board {
+  background: var(--board);
+  color: var(--bulb);
+  border-radius: var(--radius-board);
+  padding: 1.25rem 1.5rem;
+  font-stretch: 125%;
+  /* The lamp. One shadow in the whole system, and it is light rather than the
+     grey drop-shadow under every card elsewhere. */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 32px -8px var(--bulb-glow);
+}
+
+.board-score {
+  font-size: var(--step-5);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.board-team {
+  font-size: var(--step--1);
+  color: color-mix(in srgb, var(--bulb) 70%, #ffffff);
+  letter-spacing: 0.04em;
+}
+
+/* Live indicator. The only animation in the product, and it marks the one
+   thing that is actually changing while you watch. */
+.live-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--bulb);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --- Controls ------------------------------------------------------------ */
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--ink);
+  background: var(--brand);
+  color: var(--brand-ink);
+  cursor: pointer;
+}
+
+.btn-quiet {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- Layout -------------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: 68rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .shell { padding-inline: 2rem; }
+}
