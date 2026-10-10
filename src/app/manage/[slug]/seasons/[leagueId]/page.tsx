@@ -71,11 +71,20 @@ export default async function SeasonPage({
         {season.involvesMinors && ' Coaches need their requirements finished before they can be assigned.'}
       </p>
 
-      <form action={publishSeason} style={{ marginTop: '1.5rem' }}>
-        <button className={season.status === 'published' ? 'btn btn-quiet' : 'btn'} type="submit">
-          {season.status === 'published' ? 'Unpublish season' : 'Publish season'}
-        </button>
-      </form>
+      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+        <form action={publishSeason}>
+          <button className={season.status === 'published' ? 'btn btn-quiet' : 'btn'} type="submit">
+            {season.status === 'published' ? 'Unpublish season' : 'Publish season'}
+          </button>
+        </form>
+        <Link
+          className="btn btn-quiet"
+          href={`/manage/${slug}/seasons/${leagueId}/registration`}
+          style={{ display: 'inline-block' }}
+        >
+          Registration &amp; pricing
+        </Link>
+      </div>
 
       {/* Teams */}
       <section style={{ marginTop: '3rem' }}>

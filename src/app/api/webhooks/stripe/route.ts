@@ -35,6 +35,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Registration checkouts run on the LEAGUE's connected account, so
+    // checkout.session.completed arrives here as a connected-account event
+    // with `event.account` set to their acct_. The platform endpoint must be
+    // configured to listen to connected accounts or these never arrive --
+    // see docs/STRIPE.md. The signature is the platform's either way, so
+    // verification above is unchanged.
     switch (event.type) {
       case 'account.updated': {
         const account = event.data.object as Stripe.Account;
@@ -45,6 +51,12 @@ export async function POST(request: Request) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         await confirmRegistration(session);
+        break;
+      }
+
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        await markRefunded(charge);
         break;
       }
 
@@ -93,19 +105,23 @@ async function syncAccount(account: Stripe.Account) {
  * up registered, and a parent who reaches the success page without paying
  * must not.
  *
- * Idempotent by filter: it only moves rows still in `pending`, so Stripe
- * replaying this event doesn't double-count anything.
+ * Idempotent by filter: the PATCH only matches rows still in `pending`, and
+ * the response tells us whether this call was the one that moved it. That
+ * matters for the promo count below -- Stripe retries, and a replayed event
+ * must not burn a second redemption.
  */
 async function confirmRegistration(session: Stripe.Checkout.Session) {
   const registrationId = session.metadata?.registration_id;
   if (!registrationId) return;
   if (session.payment_status !== 'paid') return;
 
-  await adminFetch(
+  // `return=representation` so we can see what we changed. Without it this
+  // function can't tell "I confirmed it" from "it was already confirmed".
+  const res = await adminFetch(
     `/rest/v1/registrations?id=eq.${encodeURIComponent(registrationId)}&status=eq.pending`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
       body: JSON.stringify({
         status: 'confirmed',
         amount_paid_cents: session.amount_total ?? 0,
@@ -113,6 +129,47 @@ async function confirmRegistration(session: Stripe.Checkout.Session) {
         stripe_payment_intent_id:
           typeof session.payment_intent === 'string' ? session.payment_intent : null,
       }),
+    },
+  );
+
+  const rows = (await res.json()) as { promo_code_id: string | null }[];
+  // Empty means some earlier delivery of this event already confirmed it.
+  if (rows.length === 0) return;
+
+  // A redemption is counted on payment, not when the code is typed, so an
+  // abandoned checkout doesn't consume one of a limited run.
+  const promoId = rows[0]?.promo_code_id;
+  if (promoId) {
+    await adminFetch('/rest/v1/rpc/count_promo_redemption', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_promo_code_id: promoId }),
+    });
+  }
+}
+
+/**
+ * A refund issued in the league's own Stripe dashboard.
+ *
+ * Leagues refund from Stripe, not from here -- they already have the
+ * dashboard and a treasurer who knows it. This exists so the registration
+ * list doesn't keep showing a refunded family as paid, which is how a roster
+ * ends up with a player who withdrew in week two.
+ *
+ * Only full refunds flip the status. A partial refund is usually a goodwill
+ * adjustment, not a withdrawal, so it leaves the registration alone.
+ */
+async function markRefunded(charge: Stripe.Charge) {
+  const registrationId = charge.metadata?.registration_id;
+  if (!registrationId) return;
+  if (charge.amount_refunded < charge.amount) return;
+
+  await adminFetch(
+    `/rest/v1/registrations?id=eq.${encodeURIComponent(registrationId)}&status=eq.confirmed`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: 'refunded' }),
     },
   );
 }

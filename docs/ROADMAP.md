@@ -43,13 +43,22 @@ interesting to build.
 - Team pages: assign cleared coaches, with blocked ones listed and what each
   still owes; captain tools for inviting teammates or writing them in.
 
+- Registration: a public program list and form built from the question bank,
+  with a live itemised quote; automatic family discounts, promo codes,
+  early-bird tiers, capacity with a waitlist, and payment through the
+  league's own connected account. The quote states that we take no cut and
+  names the card fee with its real number.
+- A league's registration setup (prices, window, capacity, who covers the
+  card fee, discount codes) and a ledger showing what was collected and what
+  landed in their account.
+
 ## Next, in order
 
-**2. Registration.** Build the form from the question bank, apply tiers,
-sibling discounts and promo codes, take payment through the league's
-connected account, land the player on a roster. Three paths out of it, one
-per roster model: into the draft pool, straight onto a team, or creating a
-team with its captain.
+**2. Registration to roster.** Registration now takes money but doesn't yet
+place anyone. Three paths out, one per roster model: into the draft pool,
+onto a team the league assigns, or creating a team with its captain. The
+assigned path needs a "place these players" screen; team_registration needs
+the captain's team created at checkout.
 
 **4. The draft.** The screens for the draft board, draft lists and
 evaluations. The logic came over whole; none of it has a UI yet.

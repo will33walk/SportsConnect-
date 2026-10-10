@@ -120,6 +120,7 @@ export interface Database {
           starts_on: string | null;
           ends_on: string | null;
           involves_minors: boolean;
+          fee_policy: 'league_absorbs' | 'family_pays';
           sibling_discount_enabled: boolean;
           sibling_discount_type: 'percent' | 'flat' | null;
           sibling_discount_rate: number | null;
@@ -138,6 +139,13 @@ export interface Database {
           ends_on?: string | null;
           involves_minors?: boolean;
           created_by?: string | null;
+          capacity?: number | null;
+          fee_policy?: 'league_absorbs' | 'family_pays';
+          sibling_discount_enabled?: boolean;
+          sibling_discount_type?: 'percent' | 'flat' | null;
+          sibling_discount_rate?: number | null;
+          registration_opens_at?: string | null;
+          registration_closes_at?: string | null;
         };
         Update: Partial<Database['public']['Tables']['programs']['Insert']>;
         Relationships: [];
@@ -180,6 +188,135 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['program_sessions']['Insert']>;
         Relationships: [];
       };
+      pricing_tiers: {
+        Row: {
+          id: string;
+          program_id: string;
+          organization_id: string;
+          label: string;
+          tier_type: string;
+          amount_cents: number;
+          available_from: string | null;
+          available_until: string | null;
+          capacity: number | null;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          program_id: string;
+          organization_id: string;
+          label: string;
+          tier_type: string;
+          amount_cents: number;
+          available_from?: string | null;
+          available_until?: string | null;
+          capacity?: number | null;
+          is_active?: boolean;
+          sort_order?: number;
+        };
+        Update: Partial<Database['public']['Tables']['pricing_tiers']['Insert']>;
+        Relationships: [];
+      };
+      promo_codes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          code: string;
+          program_id: string | null;
+          discount_type: 'percent' | 'flat';
+          discount_value: number;
+          max_redemptions: number | null;
+          redeemed_count: number;
+          starts_at: string | null;
+          expires_at: string | null;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          code: string;
+          program_id?: string | null;
+          discount_type: 'percent' | 'flat';
+          discount_value: number;
+          max_redemptions?: number | null;
+          starts_at?: string | null;
+          expires_at?: string | null;
+          is_active?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['promo_codes']['Insert']>;
+        Relationships: [];
+      };
+      question_bank: {
+        Row: {
+          id: string;
+          organization_id: string;
+          label: string;
+          field_type: 'short_text' | 'long_text' | 'select' | 'multi_select' | 'checkbox' | 'date';
+          options: Json;
+          help_text: string | null;
+          created_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          label: string;
+          field_type: 'short_text' | 'long_text' | 'select' | 'multi_select' | 'checkbox' | 'date';
+          options?: Json;
+          help_text?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['question_bank']['Insert']>;
+        Relationships: [];
+      };
+      program_questions: {
+        Row: {
+          id: string;
+          program_id: string;
+          question_id: string;
+          organization_id: string;
+          is_required: boolean;
+          sort_order: number;
+        };
+        Insert: {
+          program_id: string;
+          question_id: string;
+          organization_id: string;
+          is_required?: boolean;
+          sort_order?: number;
+        };
+        Update: Partial<Database['public']['Tables']['program_questions']['Insert']>;
+        Relationships: [];
+      };
+      households: {
+        Row: {
+          id: string;
+          organization_id: string;
+          primary_contact_id: string;
+          created_at: string;
+        };
+        Insert: { organization_id: string; primary_contact_id: string };
+        Update: Partial<Database['public']['Tables']['households']['Insert']>;
+        Relationships: [];
+      };
+      dependents: {
+        Row: {
+          id: string;
+          household_id: string;
+          organization_id: string;
+          first_name: string;
+          last_name: string;
+          date_of_birth: string | null;
+          created_at: string;
+        };
+        Insert: {
+          household_id: string;
+          organization_id: string;
+          first_name: string;
+          last_name: string;
+          date_of_birth?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['dependents']['Insert']>;
+        Relationships: [];
+      };
       registrations: {
         Row: {
           id: string;
@@ -195,6 +332,11 @@ export interface Database {
           stripe_payment_intent_id: string | null;
           stripe_checkout_session_id: string | null;
           answers: Json;
+          fee_policy: 'league_absorbs' | 'family_pays';
+          quote_lines: Json;
+          net_cents: number | null;
+          child_number: number;
+          team_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -211,6 +353,11 @@ export interface Database {
           stripe_payment_intent_id?: string | null;
           stripe_checkout_session_id?: string | null;
           answers?: Json;
+          fee_policy?: 'league_absorbs' | 'family_pays';
+          quote_lines?: Json;
+          net_cents?: number | null;
+          child_number?: number;
+          team_id?: string | null;
         };
         Update: Partial<Database['public']['Tables']['registrations']['Insert']>;
         Relationships: [];
@@ -430,6 +577,26 @@ export interface Database {
       };
     };
     Views: {
+      registration_ledger: {
+        Row: {
+          id: string;
+          organization_id: string;
+          program_id: string;
+          status: string;
+          created_at: string;
+          amount_due_cents: number;
+          amount_paid_cents: number;
+          net_cents: number | null;
+          fee_policy: string;
+          child_number: number;
+          dependent_id: string | null;
+          registrant_id: string | null;
+          player_name: string | null;
+          tier_label: string | null;
+          promo_code: string | null;
+        };
+        Relationships: [];
+      };
       coach_roster: {
         Row: {
           organization_id: string;
@@ -460,6 +627,45 @@ export interface Database {
       missing_coach_requirements: {
         Args: { org: string; coach: string };
         Returns: Database['public']['Tables']['coach_requirements']['Row'][];
+      };
+      claim_registration_spot: {
+        Args: {
+          p_program_id: string;
+          p_dependent_id: string | null;
+          p_registrant_id: string | null;
+          p_pricing_tier_id: string | null;
+          p_promo_code_id: string | null;
+          p_amount_due_cents: number;
+          p_net_cents: number;
+          p_fee_policy: string;
+          p_child_number: number;
+          p_quote_lines: Json;
+          p_answers: Json;
+        };
+        Returns: { result: 'claimed' | 'full' | 'closed' | 'duplicate'; registration_id: string | null }[];
+      };
+      lookup_promo_code: {
+        Args: { p_program_id: string; p_code: string };
+        Returns: {
+          id: string;
+          code: string;
+          discount_type: string;
+          discount_value: number;
+          is_active: boolean;
+          starts_at: string | null;
+          expires_at: string | null;
+          max_redemptions: number | null;
+          redeemed_count: number;
+          program_id: string | null;
+        }[];
+      };
+      release_stale_registrations: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      count_promo_redemption: {
+        Args: { p_promo_code_id: string };
+        Returns: undefined;
       };
     };
     Enums: {

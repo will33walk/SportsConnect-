@@ -35,6 +35,7 @@ export default async function ManageLayout({
       home={`/manage/${slug}`}
       nav={[
         { href: `/manage/${slug}/seasons`, label: 'Seasons' },
+        { href: `/manage/${slug}/registrations`, label: 'Registrations' },
         { href: `/manage/${slug}/people`, label: 'People' },
         { href: `/manage/${slug}/coaches`, label: 'Coaches' },
         { href: `/manage/${slug}/payments`, label: 'Payments' },

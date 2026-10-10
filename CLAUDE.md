@@ -93,10 +93,30 @@ from. The rules below are the ones that bite if you skip them.
 
 ## Money
 
+See `docs/STRIPE.md` for setup and the webhook contract.
+
 - Per-tenant Stripe Connect accounts. Registration money goes to the league,
   not through a platform account.
-- Registration rows are written server-side after payment is validated.
-  There is no client insert policy on `registrations`, deliberately.
+- **We never take a cut of a registration.** No `application_fee_amount`, no
+  platform fee column, no service charge on a family. The league pays a flat
+  monthly price; that is the product. `quote.platformFeeCents` is always 0 and
+  exists so the breakdown can say so out loud.
+- **The client never sends an amount.** The registration form posts which
+  tier and which code; the server recomputes the price with the same
+  `buildQuote()` the browser displayed. If those two could disagree, the bug
+  is a mispriced charge.
+- A registration row exists in `pending` before checkout and is promoted to
+  `confirmed` only by the webhook — not by the browser returning. Pending
+  holds the spot for 30 minutes.
+- Capacity is enforced by `claim_registration_spot()`, which takes the program
+  row's lock before counting. Any check that reads-then-inserts oversells on
+  the night registration opens.
+- `security definer` functions do the authorization RLS would have done.
+  `claim_registration_spot()` verifies the dependent belongs to the caller's
+  household — without that, it would register someone else's child.
+- Prices and discounts are **stored on the registration** (`quote_lines`,
+  `net_cents`), not recomputed. What a family paid in April is a fact about
+  April, not a function of today's settings.
 
 ## Design
 
