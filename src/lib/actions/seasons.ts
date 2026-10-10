@@ -9,6 +9,7 @@ import { getOrgBySlug } from '@/lib/org-data';
 import { slugify, validateSlug } from '@/lib/slug';
 import { planSeason } from '@/lib/season-plan';
 import { zonedToUtc } from '@/lib/timezone';
+import { isPlanLimit } from '@/lib/plans';
 
 type RosterModel = 'draft' | 'assigned' | 'team_registration';
 const ROSTER_MODELS: RosterModel[] = ['draft', 'assigned', 'team_registration'];
@@ -34,6 +35,8 @@ async function _createSeason(orgSlug: string, formData: FormData): Promise<never
   const involvesMinors = formData.get('involves_minors') === 'on';
   const startsOn = String(formData.get('starts_on') ?? '').trim() || null;
   const endsOn = String(formData.get('ends_on') ?? '').trim() || null;
+  // Set when this is a division being added under an existing league.
+  const parentId = String(formData.get('parent_program_id') ?? '').trim() || null;
 
   if (!title) throw new Error('Give the season a name.');
   if (!sportKey) throw new Error('Pick a sport.');
@@ -48,6 +51,20 @@ async function _createSeason(orgSlug: string, formData: FormData): Promise<never
 
   const supabase = await createClient();
 
+  // A parent must be a league in this org. Without this an id from another
+  // organization could be passed and a division hung off a stranger's league.
+  if (parentId) {
+    const { data: parent } = await supabase
+      .from('programs')
+      .select('id')
+      .eq('id', parentId)
+      .eq('organization_id', org.id)
+      .eq('kind', 'league')
+      .maybeSingle();
+
+    if (!parent) throw new Error('That parent league isn’t in this organization.');
+  }
+
   const { data: program, error } = await supabase
     .from('programs')
     .insert({
@@ -56,6 +73,7 @@ async function _createSeason(orgSlug: string, formData: FormData): Promise<never
       sport_key: sportKey,
       title,
       slug,
+      parent_program_id: parentId,
       involves_minors: involvesMinors,
       starts_on: startsOn,
       ends_on: endsOn,
@@ -66,6 +84,11 @@ async function _createSeason(orgSlug: string, formData: FormData): Promise<never
 
   if (error) {
     if (error.code === '23505') throw new Error('You already have a season with that name.');
+    // The plan trigger raises check_violation with copy written for a league
+    // director, naming what Unlimited unlocks. Pass it through rather than
+    // flattening it to "couldn't create the season" -- this is the moment
+    // somebody decides whether the upgrade is worth it.
+    if (isPlanLimit(error)) throw new Error(error.message);
     throw new Error('Couldn’t create the season.');
   }
 
@@ -156,7 +179,11 @@ async function _setSeasonStatus(
 
   const supabase = await createClient();
   const { error } = await supabase.from('programs').update({ status }).eq('id', leagueId);
-  if (error) throw new Error('Couldn’t change that.');
+  if (error) {
+    // Un-archiving a second season on the League plan lands here.
+    if (isPlanLimit(error)) throw new Error(error.message);
+    throw new Error('Couldn’t change that.');
+  }
 
   revalidatePath(`/manage/${orgSlug}/seasons/${leagueId}`);
   revalidatePath(`/l/${orgSlug}`);

@@ -3,9 +3,12 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { getOrgBySlug } from '@/lib/org-data';
-import { getSeason, listTeams, type RosterModel } from '@/lib/season-data';
+import { getSeason, listSeasons, listTeams, type RosterModel } from '@/lib/season-data';
 import { AddTeamForm } from '@/components/AddTeamForm';
 import { ScheduleBuilder } from '@/components/ScheduleBuilder';
+import { AddGameForm } from '@/components/AddGameForm';
+import { addGame } from '@/lib/actions/games';
+import { getOrgPlan } from '@/lib/org-data';
 import {
   clearSchedule,
   createTeam,
@@ -35,6 +38,9 @@ export default async function SeasonPage({
   if (!season) notFound();
 
   const teams = await listTeams(leagueId);
+  // Divisions under this season, if it's a parent. Loaded from the same
+  // listSeasons() the index uses so the counts agree between the two screens.
+  const divisions = (await listSeasons(org.id)).filter((s) => s.parentId === leagueId);
 
   const supabase = await createClient();
   const { data: games } = await supabase
@@ -49,6 +55,8 @@ export default async function SeasonPage({
 
   const addTeam = createTeam.bind(null, slug, leagueId);
   const buildSchedule = generateSchedule.bind(null, slug, leagueId);
+  const addOneGame = addGame.bind(null, slug, leagueId);
+  const plan = await getOrgPlan(org.id);
 
   async function publishSeason() {
     'use server';
@@ -63,6 +71,12 @@ export default async function SeasonPage({
     <div className="shell" style={{ paddingBlock: '2.5rem', maxWidth: '48rem' }}>
       <p style={{ fontSize: 'var(--step--1)' }}>
         <Link href={`/manage/${slug}/seasons`}>Seasons</Link>
+        {season.parentTitle && season.parentId && (
+          <>
+            {' / '}
+            <Link href={`/manage/${slug}/seasons/${season.parentId}`}>{season.parentTitle}</Link>
+          </>
+        )}
       </p>
 
       <h1 style={{ fontSize: 'var(--step-3)', marginTop: '1rem' }}>{season.title}</h1>
@@ -85,6 +99,53 @@ export default async function SeasonPage({
           Registration &amp; pricing
         </Link>
       </div>
+
+      {/* Divisions. Only meaningful for a top-level season on Unlimited --
+          a division can't have divisions of its own, and the League plan
+          doesn't include them at all. */}
+      {!season.parentId && (plan === 'unlimited' || divisions.length > 0) && (
+        <section style={{ marginTop: '3rem' }}>
+          <h2>Divisions</h2>
+
+          {divisions.length === 0 ? (
+            <p style={{ color: 'var(--ink-soft)', marginTop: '0.5rem' }}>
+              Split this into age groups — T-ball, 8u, 11u, 14u — each with its
+              own teams, schedule and registration.
+            </p>
+          ) : (
+            <div className="ruled rule-heavy" style={{ marginTop: '1rem' }}>
+              {divisions.map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/manage/${slug}/seasons/${d.id}`}
+                  className="row"
+                  style={{ justifyContent: 'space-between', textDecoration: 'none' }}
+                >
+                  <span>
+                    <strong>{d.title}</strong>
+                    <br />
+                    <span style={{ fontSize: 'var(--step--1)', color: 'var(--ink-faint)' }}>
+                      {d.teamCount === 0 ? 'no teams yet' : `${d.teamCount} teams`}
+                      {d.gameCount > 0 && ` · ${d.gameCount} games`}
+                    </span>
+                  </span>
+                  <span style={{ color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>
+                    {d.status === 'published' ? 'Live' : 'Draft'}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {plan === 'unlimited' && (
+            <p style={{ marginTop: '1rem' }}>
+              <Link href={`/manage/${slug}/seasons/new?parent=${leagueId}`}>
+                Add a division
+              </Link>
+            </p>
+          )}
+        </section>
+      )}
 
       {/* Teams */}
       <section style={{ marginTop: '3rem' }}>
@@ -147,6 +208,16 @@ export default async function SeasonPage({
               teamCount={teams.length}
               defaultStart={season.startsOn ?? new Date().toISOString().slice(0, 10)}
             />
+
+            {teams.length >= 2 && (
+              <div style={{ marginTop: '2.5rem', borderTop: '1px solid var(--rule)', paddingTop: '1.5rem' }}>
+                <h3 style={{ fontSize: 'var(--step-0)' }}>Or add games one at a time</h3>
+                <p className="field-hint" style={{ marginBottom: '0.5rem' }}>
+                  Some leagues schedule by hand all season. That works fine.
+                </p>
+                <AddGameForm action={addOneGame} teams={teams} />
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -173,7 +244,16 @@ export default async function SeasonPage({
               </form>
             </div>
 
-            <div className="ruled rule-heavy" style={{ marginTop: '1rem' }}>
+            <div style={{ marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: 'var(--step-0)' }}>Add a game by hand</h3>
+              <p className="field-hint" style={{ marginBottom: '0.5rem' }}>
+                A makeup, a scrimmage, a tournament game — anything the
+                generator didn&rsquo;t lay out.
+              </p>
+              <AddGameForm action={addOneGame} teams={teams} />
+            </div>
+
+            <div className="ruled rule-heavy" style={{ marginTop: '2rem' }}>
               {games!.map((g) => (
                 <div key={g.id} className="row" style={{ justifyContent: 'space-between' }}>
                   <span>

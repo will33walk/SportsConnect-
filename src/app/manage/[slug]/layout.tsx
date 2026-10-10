@@ -38,7 +38,9 @@ export default async function ManageLayout({
         { href: `/manage/${slug}/registrations`, label: 'Registrations' },
         { href: `/manage/${slug}/people`, label: 'People' },
         { href: `/manage/${slug}/coaches`, label: 'Coaches' },
+        { href: `/manage/${slug}/messages`, label: 'Messages' },
         { href: `/manage/${slug}/payments`, label: 'Payments' },
+        { href: `/manage/${slug}/plan`, label: 'Plan' },
         { href: `/manage/${slug}/settings`, label: 'Settings' },
         { href: `/l/${slug}`, label: 'View public page' },
       ]}

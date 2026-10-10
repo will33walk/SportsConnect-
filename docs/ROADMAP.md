@@ -52,6 +52,13 @@ interesting to build.
   card fee, discount codes) and a ledger showing what was collected and what
   landed in their account.
 
+- Two plans with the limit enforced in the database, divisions under a parent
+  league, and an upgrade path that explains itself.
+- Blast messaging to a whole organization, a season or division, or picked
+  teams, with a recipient count before sending.
+- Manual game scheduling alongside the generator: add, move, cancel,
+  postpone, and enter a final score by hand.
+
 ## Next, in order
 
 **2. Registration to roster.** Registration now takes money but doesn't yet

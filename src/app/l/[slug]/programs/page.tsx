@@ -21,7 +21,7 @@ export default async function ProgramsPage({
   // this page is meant to be opened from a flyer by someone with no account.
   const { data: programs } = await supabase
     .from('programs')
-    .select('id, title, short_description, starts_on, ends_on, age_min, age_max, registration_closes_at')
+    .select('id, title, short_description, starts_on, ends_on, age_min, age_max, parent_program_id, registration_closes_at')
     .eq('organization_id', org.id)
     .eq('status', 'published')
     .order('starts_on', { nullsFirst: false });
@@ -55,6 +55,11 @@ export default async function ProgramsPage({
         <div className="ruled rule-heavy" style={{ marginTop: '2rem' }}>
           {programs!.map((p) => {
             const price = fromPrice.get(p.id);
+            // A division shows its parent's name above it, so a family
+            // scanning "MCYBL — 8u" knows which league they're signing up to.
+            const parentTitle = p.parent_program_id
+              ? (programs!.find((x) => x.id === p.parent_program_id)?.title ?? null)
+              : null;
             return (
               <Link
                 key={p.id}
@@ -63,6 +68,14 @@ export default async function ProgramsPage({
                 style={{ justifyContent: 'space-between', textDecoration: 'none' }}
               >
                 <span>
+                  {parentTitle && (
+                    <>
+                      <span style={{ fontSize: 'var(--step--1)', color: 'var(--ink-faint)' }}>
+                        {parentTitle}
+                      </span>
+                      <br />
+                    </>
+                  )}
                   <strong style={{ fontSize: 'var(--step-1)' }}>{p.title}</strong>
                   {(p.age_min !== null || p.age_max !== null) && (
                     <>

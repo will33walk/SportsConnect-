@@ -21,6 +21,7 @@ export interface OrgBilling {
   stripeAccountId: string | null;
   chargesEnabled: boolean;
   subscriptionStatus: string;
+  plan: 'league' | 'unlimited';
 }
 
 /**
@@ -62,7 +63,7 @@ export const getOrgBilling = cache(async (orgId: string): Promise<OrgBilling | n
   const supabase = await createClient();
   const { data } = await supabase
     .from('organization_billing')
-    .select('stripe_account_id, charges_enabled, subscription_status')
+    .select('stripe_account_id, charges_enabled, subscription_status, plan')
     .eq('organization_id', orgId)
     .maybeSingle();
 
@@ -71,5 +72,27 @@ export const getOrgBilling = cache(async (orgId: string): Promise<OrgBilling | n
     stripeAccountId: data.stripe_account_id,
     chargesEnabled: data.charges_enabled,
     subscriptionStatus: data.subscription_status,
+    plan: data.plan,
   };
 });
+
+/**
+ * The org's plan, readable by any member rather than only an admin.
+ *
+ * A league manager needs to know whether divisions are available to them, and
+ * `organization_billing` is admin-only on purpose. This goes through the
+ * security-definer function, which returns the plan and nothing else about
+ * the league's money.
+ */
+export async function getOrgPlan(orgId: string): Promise<'league' | 'unlimited'> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc('org_plan_of', { org: orgId });
+  return data === 'unlimited' ? 'unlimited' : 'league';
+}
+
+/** How many seasons currently count against a League plan's one-at-a-time. */
+export async function getActiveSeasonCount(orgId: string): Promise<number> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc('active_season_count', { org: orgId });
+  return typeof data === 'number' ? data : 0;
+}

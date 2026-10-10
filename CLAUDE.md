@@ -35,6 +35,44 @@ from. The rules below are the ones that bite if you skip them.
   "this game". The ladder answers "this organization". Don't use one for the
   other — a head coach is not a league manager.
 
+## Plans and divisions
+
+- Two plans, in `organization_billing.plan`: `league` ($35/month, one active
+  season at a time, no divisions) and `unlimited` ($75/month, many seasons
+  plus divisions under a parent league).
+- **The limit is a trigger**, `enforce_plan_limits()` in 0009. A paywall that
+  lives only in an action is one forgotten `if` from giving the product away,
+  and this one has revenue behind it. Application code catches the raise with
+  `isPlanLimit()` and shows the message — it does not reimplement the rule.
+- The trigger's messages are written for a league director and name what
+  Unlimited unlocks. Pass them through; never flatten one to "something went
+  wrong". That text is read at the moment someone decides whether the upgrade
+  is worth $40.
+- Archiving is always allowed, even over the limit. Without that, an org that
+  downgraded while holding two live seasons could not archive its way back
+  inside the plan.
+- Only `kind = 'league'` is metered. Camps, clinics and one-off events are
+  unlimited on both plans.
+- A division is a program with `parent_program_id` set. One level only, by
+  trigger. Each division keeps its own teams, schedule, registration and
+  roster model; the parent exists to group them and to be an address a blast
+  can reach.
+- Plan copy lives in `src/lib/plans.ts`. Don't scatter prices or feature lists
+  through screens.
+
+## Messaging
+
+- A blast is an `announcements` row, not a thread. Threads are conversations;
+  conflating them is how a parent replies "ok thanks" to four hundred people.
+- Three audiences: the whole organization, one season or division (a parent
+  league reaches every division under it), or picked teams.
+- `announcement_audience()` resolves recipients and is used for both the
+  pre-send count and the send itself, so the number shown is the number
+  reached.
+- Blasts go to adults — parents, guardians, coaches — never to player records.
+- `send_announcement()` records, targets and fans out in one transaction. A
+  failure partway through must not leave a blast that reached half a league.
+
 ## Coaches and rosters
 
 - **Approval is not clearance.** An approved application means the league

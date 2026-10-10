@@ -71,6 +71,7 @@ export interface Database {
           stripe_account_id: string | null;
           stripe_customer_id: string | null;
           charges_enabled: boolean;
+          plan: 'league' | 'unlimited';
           subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled';
           trial_ends_at: string;
           updated_at: string;
@@ -80,6 +81,7 @@ export interface Database {
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           charges_enabled?: boolean;
+          plan?: 'league' | 'unlimited';
         };
         Update: Partial<Database['public']['Tables']['organization_billing']['Insert']>;
         Relationships: [];
@@ -575,6 +577,34 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['game_scorekeepers']['Insert']>;
         Relationships: [];
       };
+      announcements: {
+        Row: {
+          id: string;
+          organization_id: string;
+          scope: 'organization' | 'program' | 'teams';
+          program_id: string | null;
+          subject: string;
+          body: string;
+          recipient_count: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          scope: 'organization' | 'program' | 'teams';
+          program_id?: string | null;
+          subject: string;
+          body: string;
+        };
+        Update: Partial<Database['public']['Tables']['announcements']['Insert']>;
+        Relationships: [];
+      };
+      announcement_teams: {
+        Row: { announcement_id: string; team_id: string };
+        Insert: { announcement_id: string; team_id: string };
+        Update: Partial<Database['public']['Tables']['announcement_teams']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: {
       registration_ledger: {
@@ -666,6 +696,34 @@ export interface Database {
       count_promo_redemption: {
         Args: { p_promo_code_id: string };
         Returns: undefined;
+      };
+      org_plan_of: {
+        Args: { org: string };
+        Returns: 'league' | 'unlimited';
+      };
+      active_season_count: {
+        Args: { org: string };
+        Returns: number;
+      };
+      announcement_audience: {
+        Args: {
+          p_organization_id: string;
+          p_scope: string;
+          p_program_id: string | null;
+          p_team_ids: string[];
+        };
+        Returns: string[];
+      };
+      send_announcement: {
+        Args: {
+          p_organization_id: string;
+          p_scope: string;
+          p_program_id: string | null;
+          p_team_ids: string[];
+          p_subject: string;
+          p_body: string;
+        };
+        Returns: { announcement_id: string; recipients: number }[];
       };
     };
     Enums: {

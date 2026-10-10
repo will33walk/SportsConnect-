@@ -16,6 +16,11 @@ export interface SeasonSummary {
   standingsPublished: boolean;
   teamCount: number;
   gameCount: number;
+  /** Null for a top-level season; set when this is a division. */
+  parentId: string | null;
+  parentTitle: string | null;
+  /** True when other seasons sit under this one as divisions. */
+  hasDivisions: boolean;
 }
 
 export interface TeamSummary {
@@ -32,7 +37,7 @@ export async function listSeasons(orgId: string): Promise<SeasonSummary[]> {
 
   const { data: programs } = await supabase
     .from('programs')
-    .select('id, title, sport_key, status, starts_on, ends_on, involves_minors, created_at')
+    .select('id, title, sport_key, status, starts_on, ends_on, involves_minors, parent_program_id, created_at')
     .eq('organization_id', orgId)
     .eq('kind', 'league')
     .neq('status', 'archived')
@@ -56,6 +61,10 @@ export async function listSeasons(orgId: string): Promise<SeasonSummary[]> {
     .eq('session_type', 'game');
 
   const leagueById = new Map((leagues ?? []).map((l) => [l.id, l]));
+  const titleById = new Map(programs.map((p) => [p.id, p.title]));
+  const parentIds = new Set(
+    programs.map((p) => p.parent_program_id).filter((v): v is string => Boolean(v)),
+  );
   const countBy = <T extends Record<string, unknown>>(rows: T[] | null, key: keyof T) => {
     const counts = new Map<string, number>();
     for (const r of rows ?? []) {
@@ -88,6 +97,9 @@ export async function listSeasons(orgId: string): Promise<SeasonSummary[]> {
       standingsPublished: Boolean(l.standings_published_at),
       teamCount: teamCounts.get(p.id) ?? 0,
       gameCount: gameCounts.get(p.id) ?? 0,
+      parentId: p.parent_program_id,
+      parentTitle: p.parent_program_id ? (titleById.get(p.parent_program_id) ?? null) : null,
+      hasDivisions: parentIds.has(p.id),
     }];
   });
 }

@@ -7,6 +7,8 @@ import type { RosterModel } from '@/lib/season-data';
 interface Props {
   action: (formData: FormData) => Promise<ActionResult<never>>;
   sports: { key: string; label: string }[];
+  /** Set when this is a division being added under an existing league. */
+  parent?: { id: string; title: string } | null;
 }
 
 // Written as what a league director would say out loud, not as the enum.
@@ -28,7 +30,7 @@ const MODELS: { value: RosterModel; label: string; blurb: string }[] = [
   },
 ];
 
-export function NewSeasonForm({ action, sports }: Props) {
+export function NewSeasonForm({ action, sports, parent }: Props) {
   const [model, setModel] = useState<RosterModel>('assigned');
   const [involvesMinors, setInvolvesMinors] = useState(true);
   const [touchedMinors, setTouchedMinors] = useState(false);
@@ -51,17 +53,21 @@ export function NewSeasonForm({ action, sports }: Props) {
 
   return (
     <form action={formAction} noValidate>
+      {parent && <input type="hidden" name="parent_program_id" value={parent.id} />}
+
       <div className="field">
-        <label htmlFor="title">Season name</label>
+        <label htmlFor="title">{parent ? 'Division name' : 'Season name'}</label>
         <input
           id="title"
           name="title"
           type="text"
           required
-          placeholder="Spring 2027 — 10u Baseball"
+          placeholder={parent ? '8u' : 'Spring 2027 — 10u Baseball'}
         />
         <p className="field-hint">
-          Include the year and division — families will see this.
+          {parent
+            ? 'What families call this age group — “8u”, “T-ball”, “Junior Varsity”.'
+            : 'Include the year and division — families will see this.'}
         </p>
       </div>
 
